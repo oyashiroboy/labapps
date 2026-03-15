@@ -1,0 +1,106 @@
+<main class="ppt-tool">
+  <header class="page-header">
+    <h1>Slide Themer</h1>
+    <p class="page-desc">研究発表用のPowerPointテンプレート（.potx）を生成します。<br>画像から自動で配色を決めることも、手動で色を選ぶこともできます。</p>
+  </header>
+
+  <% if flash[:notice].present? %>
+    <div class="alert success"><%= flash[:notice] %></div>
+  <% end %>
+
+  <% if flash[:alert].present? %>
+    <div class="alert"><%= flash[:alert] %></div>
+  <% end %>
+
+  <!-- メインのテンプレート生成フォーム -->
+  <%= form_with url: ppt_tool_generate_path, method: :post, local: true, data: { turbo: false }, class: "main-form" do |form| %>
+    
+    <section class="form-section">
+      <h2 class="section-label">Output</h2>
+      <div class="field">
+        <label>ファイル名</label>
+        <%= form.text_field :filename_base, value: (@saved_filename_base.presence || nil), placeholder: "例: 〇〇研究室_学会発表_2025" %>
+        <div class="help">拡張子（.potx）は自動で付きます</div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2 class="section-label">Accent Colors</h2>
+      <p class="section-desc">PowerPointのテーマカラーとして使用される6色です。</p>
+      
+      <div class="palette-grid">
+        <% 6.times do |i| %>
+          <% hex = @current_palette[i].to_s.strip %>
+          <% hex = '2563EB' unless hex.match?(/\A[0-9A-Fa-f]{6}\z/) %>
+          <div class="palette-item">
+            <input type="color" name="palette[]" value="#<%= hex.upcase %>">
+            <div class="palette-info">
+              <span class="palette-label">Accent <%= i + 1 %></span>
+              <span class="palette-hex">#<%= hex.upcase %></span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <section class="form-section generate-section">
+      <div class="actions">
+        <%= form.submit "テンプレートを生成", class: "btn primary large" %>
+      </div>
+    </section>
+
+  <% end %>
+
+  <hr class="divider">
+
+  <!-- 画像から色を抽出するセクション -->
+  <section class="form-section">
+    <h2 class="section-label">Extract from Image</h2>
+    <p class="section-desc">ロゴや写真から自動で統一感のある配色を生成できます。</p>
+    
+    <%= form_with url: ppt_tool_analyze_path, method: :post, multipart: true, local: true, data: { turbo: false } do |f| %>
+      <div class="field-row">
+        <div class="field">
+          <label>配色ルール</label>
+          <%= f.select :mode,
+                      options_for_select([
+                        ['類似色（落ち着いた統一感）', 'analogous'],
+                        ['補色（コントラスト強め）', 'complementary'],
+                        ['トライアド（バランス良く鮮やか）', 'triad'],
+                        ['スクエア（多彩でダイナミック）', 'square']
+                      ], (@saved_mode.presence || 'analogous')) %>
+        </div>
+        <div class="field">
+          <label>画像ファイル</label>
+          <%= f.file_field :image, accept: "image/*" %>
+        </div>
+        <div class="field field-action">
+          <%= f.submit "抽出", class: "btn primary" %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <!-- 設定の保存・復元 -->
+  <section class="form-section">
+    <h2 class="section-label">Import / Export</h2>
+    <div class="field-row">
+      <a class="btn" href="<%= ppt_tool_export_path %>" data-turbo="false">設定をエクスポート</a>
+      <%= form_with url: ppt_tool_import_path, method: :post, multipart: true, local: true, data: { turbo: false }, class: "import-form" do |f| %>
+        <%= f.file_field :settings_file, accept: "application/json" %>
+        <%= f.submit "インポート", class: "btn" %>
+      <% end %>
+    </div>
+  </section>
+
+  <!-- 使い方 -->
+  <details class="help-details">
+    <summary>使い方のヒント</summary>
+    <ul>
+      <li>研究室のロゴや大学のカラーを画像として読み込むと、統一感のあるスライドが作れます</li>
+      <li>生成された <code>.potx</code> ファイルは、PowerPointで「デザイン」→「テーマの参照」から適用できます</li>
+      <li>配色は手動で微調整できます。Accent 1 が最もよく使われる色です</li>
+      <li>設定をJSONでエクスポートしておけば、次回以降すぐに同じ配色を使えます</li>
+    </ul>
+  </details>
+</main>

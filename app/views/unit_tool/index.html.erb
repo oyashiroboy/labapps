@@ -1,0 +1,384 @@
+<main class="unit-tool">
+  <header class="page-header">
+    <h1>Unit & Style Checker</h1>
+    <p class="page-desc">Word文書の数値-単位間スペース、演算子、温度表記等をチェックします。</p>
+  </header>
+
+  <% if flash[:notice].present? %>
+    <div class="alert success"><%= flash[:notice] %></div>
+  <% end %>
+
+  <% if flash[:alert].present? %>
+    <div class="alert"><%= flash[:alert] %></div>
+  <% end %>
+
+  <!-- ステップインジケーター -->
+  <div class="step-indicator">
+    <div class="step <%= @step >= 1 ? 'active' : '' %> <%= @step > 1 ? 'completed' : '' %>">
+      <span class="step-num">1</span>
+      <span class="step-label">スタイル</span>
+    </div>
+    <div class="step-line <%= @step > 1 ? 'active' : '' %>"></div>
+    <div class="step <%= @step >= 2 ? 'active' : '' %> <%= @step > 2 ? 'completed' : '' %>">
+      <span class="step-num">2</span>
+      <span class="step-label">単位設定</span>
+    </div>
+    <div class="step-line <%= @step > 2 ? 'active' : '' %>"></div>
+    <div class="step <%= @step >= 3 ? 'active' : '' %> <%= @step > 3 ? 'completed' : '' %>">
+      <span class="step-num">3</span>
+      <span class="step-label">チェック項目</span>
+    </div>
+    <div class="step-line <%= @step > 3 ? 'active' : '' %>"></div>
+    <div class="step <%= @step >= 4 ? 'active' : '' %> <%= @step > 4 ? 'completed' : '' %>">
+      <span class="step-num">4</span>
+      <span class="step-label">ファイル</span>
+    </div>
+    <div class="step-line <%= @step > 4 ? 'active' : '' %>"></div>
+    <div class="step <%= @step >= 5 ? 'active' : '' %>">
+      <span class="step-num">5</span>
+      <span class="step-label">結果</span>
+    </div>
+  </div>
+
+  <% if @step == 1 %>
+    <!-- ========== Step 1: スタイル選択 ========== -->
+    <section class="form-section">
+      <h2 class="section-label">スタイルを選択</h2>
+      <p class="section-desc">どのスタイルに準拠してチェックしますか？</p>
+      
+      <%= form_with url: unit_tool_select_style_path, method: :post, local: true, data: { turbo: false }, class: "main-form" do |f| %>
+        <div class="style-options">
+          <label class="style-option">
+            <input type="radio" name="preset" value="jis">
+            <div class="style-card">
+              <h3>JIS</h3>
+              <p>日本語論文向け</p>
+              <ul class="style-features">
+                <li>℃ 推奨</li>
+                <li>演算子スペース任意</li>
+                <li>L, ℓ どちらも可</li>
+              </ul>
+            </div>
+          </label>
+          
+          <label class="style-option">
+            <input type="radio" name="preset" value="nature" checked>
+            <div class="style-card">
+              <h3>Nature系</h3>
+              <p>Nature, Science等</p>
+              <ul class="style-features">
+                <li>°C 必須</li>
+                <li>演算子スペース必須</li>
+                <li>L（大文字）必須</li>
+              </ul>
+            </div>
+          </label>
+          
+          <label class="style-option">
+            <input type="radio" name="preset" value="acs">
+            <div class="style-card">
+              <h3>ACS/MDPI</h3>
+              <p>化学系ジャーナル</p>
+              <ul class="style-features">
+                <li>°C 必須</li>
+                <li>演算子スペース必須</li>
+                <li>L（大文字）必須</li>
+              </ul>
+            </div>
+          </label>
+        </div>
+        
+        <div class="actions">
+          <%= f.submit "次へ", class: "btn primary large" %>
+        </div>
+      <% end %>
+    </section>
+
+  <% elsif @step == 2 %>
+    <!-- ========== Step 2: スペース不要単位の確認 ========== -->
+    <section class="form-section">
+      <h2 class="section-label">スペース不要単位の確認</h2>
+      <p class="section-desc">
+        選択したスタイル（<strong><%= @presets[@preset]['name'] %></strong>）では、<br>
+        以下の単位は数値との間にスペースが不要です。追加・削除できます。
+      </p>
+      
+      <%= form_with url: unit_tool_confirm_units_path, method: :post, local: true, data: { turbo: false }, class: "main-form" do |f| %>
+        <div class="field">
+          <label>スペース不要単位（カンマ区切り）</label>
+          <%= f.text_field :no_space_units, value: @no_space_units.join(', '), class: "input-wide" %>
+          <div class="help">例: %, °, ′, ″, ℃</div>
+        </div>
+        
+        <div class="unit-preview">
+          <p><strong>プレビュー:</strong></p>
+          <ul>
+            <li>50% ← スペースなし（正）</li>
+            <li>100 mg ← スペースあり（正）</li>
+            <li>45° ← スペースなし（正）</li>
+          </ul>
+        </div>
+        
+        <div class="actions">
+          <a href="<%= unit_tool_back_path %>" class="btn" data-turbo="false">戻る</a>
+          <%= f.submit "次へ", class: "btn primary large" %>
+        </div>
+      <% end %>
+    </section>
+
+  <% elsif @step == 3 %>
+    <!-- ========== Step 3: チェック項目選択 ========== -->
+    <section class="form-section">
+      <h2 class="section-label">チェック項目を選択</h2>
+      <p class="section-desc">追加でチェックしたい項目を選んでください。</p>
+      
+      <%= form_with url: unit_tool_select_checks_path, method: :post, local: true, data: { turbo: false }, class: "main-form" do |f| %>
+        <div class="check-options">
+          <label class="check-option always-on">
+            <input type="checkbox" checked disabled>
+            <div class="check-info">
+              <h4>数値-単位間スペース</h4>
+              <p>メインのチェック項目（常に有効）</p>
+              <code>100mg → 100 mg</code>
+            </div>
+          </label>
+          
+          <label class="check-option">
+            <input type="checkbox" name="check_operator" value="1" <%= @preset != 'jis' ? 'checked' : '' %>>
+            <div class="check-info">
+              <h4>演算子周りのスペース</h4>
+              <p>=, &lt;, &gt;, +, - 等の前後</p>
+              <code>p<0.05 → p < 0.05</code>
+            </div>
+          </label>
+          
+          <label class="check-option">
+            <input type="checkbox" name="check_temperature" value="1" checked>
+            <div class="check-info">
+              <h4>温度表記の揺れ</h4>
+              <p>℃ と °C の混在を検出</p>
+            </div>
+          </label>
+          
+          <label class="check-option">
+            <input type="checkbox" name="check_liter" value="1" checked>
+            <div class="check-info">
+              <h4>リットル表記の揺れ</h4>
+              <p>L, l, ℓ の混在を検出</p>
+            </div>
+          </label>
+          
+          <label class="check-option">
+            <input type="checkbox" name="check_time" value="1">
+            <div class="check-info">
+              <h4>時間表記（SI推奨）</h4>
+              <p>days→d, hours→h 等を提案</p>
+              <code>3 days → 3 d</code>
+            </div>
+          </label>
+          
+          <label class="check-option">
+            <input type="checkbox" name="check_inequality" value="1">
+            <div class="check-info">
+              <h4>不等号の揺れ</h4>
+              <p>≧/≦ と ≥/≤ の混在を検出</p>
+            </div>
+          </label>
+        </div>
+        
+        <div class="actions">
+          <a href="<%= unit_tool_back_path %>" class="btn" data-turbo="false">戻る</a>
+          <%= f.submit "次へ", class: "btn primary large" %>
+        </div>
+      <% end %>
+    </section>
+
+  <% elsif @step == 4 %>
+    <!-- ========== Step 4: ファイルアップロード ========== -->
+    <section class="form-section">
+      <h2 class="section-label">Word文書をアップロード</h2>
+      <p class="section-desc">
+        スタイル: <strong><%= @presets[@preset]['name'] %></strong><br>
+        スペース不要: <strong><%= @no_space_units.join(', ') %></strong>
+      </p>
+      
+      <div class="privacy-notice">
+        <strong>🔒 プライバシーについて</strong>
+        <ul class="privacy-list">
+          <li>アップロードされたWordファイルはチェック完了後に<strong>即座に削除</strong>されます。</li>
+          <li>チェック結果は一時保存されますが、<strong>10分以内に自動削除</strong>されます。</li>
+          <li>運営者がアップロードされた文書の内容を閲覧することは<strong>ありません</strong>。</li>
+        </ul>
+        <p class="privacy-disclaimer">
+          ※ 本サービスはシンVPSおよびCloudflare等のホスティングサービス上で稼働しています。
+          これらのインフラに起因するセキュリティ上の問題（脆弱性、不正アクセス等）が万一発生した場合、
+          運営者は責任を負いかねます。機密性の高い未発表原稿等のアップロードは、リスクをご理解の上でご利用ください。なお、このアプリケーションが好評であればサーバーにアップロードしない形式や.exeファイルなどでの検出が可能な形式を作成します。気軽に連絡いただければと思います。
+        </p>
+      </div>
+      
+      <%= form_with url: unit_tool_check_path, method: :post, multipart: true, local: true, data: { turbo: false }, class: "main-form" do |f| %>
+        <div class="field">
+          <label>Wordファイル（.docx）</label>
+          <%= f.file_field :docx_file, accept: ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" %>
+          <div class="help">最大20MBまで</div>
+        </div>
+        
+        <div class="actions">
+          <a href="<%= unit_tool_back_path %>" class="btn" data-turbo="false">戻る</a>
+          <%= f.submit "チェック開始", class: "btn primary large" %>
+        </div>
+      <% end %>
+    </section>
+
+  <% elsif @step == 5 %>
+    <!-- ========== Step 5: 結果表示 ========== -->
+    <section class="form-section">
+      <h2 class="section-label">チェック結果</h2>
+      
+      <% if @results %>
+        <div class="result-summary">
+          <div class="summary-item error">
+            <span class="summary-count"><%= @results['summary']['error'] %></span>
+            <span class="summary-label">要修正</span>
+          </div>
+          <div class="summary-item warning">
+            <span class="summary-count"><%= @results['summary']['warning'] %></span>
+            <span class="summary-label">警告</span>
+          </div>
+          <div class="summary-item info">
+            <span class="summary-count"><%= @results['summary']['info'] %></span>
+            <span class="summary-label">推奨</span>
+          </div>
+        </div>
+        
+        <% if @results['issues'].any? %>
+          <div class="legend-box">
+            <span class="legend-title">凡例:</span>
+            <span class="legend-item"><span class="issue-original">検出</span>→<span class="issue-suggestion">修正案</span></span>
+            <span class="legend-item">文中表示: ...→<em>検出箇所</em>←...</span>
+          </div>
+          <div class="issues-list">
+            <% # エラー %>
+            <% errors = @results['issues'].select { |i| i['severity'] == 'error' } %>
+            <% if errors.any? %>
+              <div class="issues-group">
+                <h3 class="issues-group-title error">要修正 (<%= errors.size %>)</h3>
+                <% errors.each do |issue| %>
+                  <div class="issue-item">
+                    <div class="issue-header">
+                      <span class="issue-location">
+                        <% if issue['para_idx'] %><%= issue['para_idx'] + 1 %>段落目<% end %>
+                      </span>
+                      <div class="issue-transform">
+                        <span class="issue-original"><%= issue['original'] %></span>
+                        <% if issue['suggestion'] %>
+                          <span class="issue-arrow">→</span>
+                          <span class="issue-suggestion"><%= issue['suggestion'] %></span>
+                        <% end %>
+                      </div>
+                    </div>
+                    <div class="issue-message"><%= issue['message'] %></div>
+                    <% if issue['context'] %>
+                      <div class="issue-context"><%= issue['context'] %></div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            
+            <% # 警告 %>
+            <% warnings = @results['issues'].select { |i| i['severity'] == 'warning' } %>
+            <% if warnings.any? %>
+              <div class="issues-group">
+                <h3 class="issues-group-title warning">警告 (<%= warnings.size %>)</h3>
+                <% warnings.each do |issue| %>
+                  <div class="issue-item">
+                    <div class="issue-header">
+                      <span class="issue-location">
+                        <% if issue['para_idx'] %><%= issue['para_idx'] + 1 %>段落目<% end %>
+                      </span>
+                      <div class="issue-transform">
+                        <% if issue['original'] %>
+                          <span class="issue-original"><%= issue['original'] %></span>
+                        <% end %>
+                        <% if issue['suggestion'] %>
+                          <span class="issue-arrow">→</span>
+                          <span class="issue-suggestion"><%= issue['suggestion'] %></span>
+                        <% end %>
+                      </div>
+                    </div>
+                    <div class="issue-message"><%= issue['message'] %></div>
+                    <% if issue['context'] %>
+                      <div class="issue-context"><%= issue['context'] %></div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            
+            <% # 推奨 %>
+            <% infos = @results['issues'].select { |i| i['severity'] == 'info' } %>
+            <% if infos.any? %>
+              <div class="issues-group">
+                <h3 class="issues-group-title info">推奨 (<%= infos.size %>)</h3>
+                <% infos.first(20).each do |issue| %>
+                  <div class="issue-item">
+                    <div class="issue-header">
+                      <span class="issue-location">
+                        <% if issue['para_idx'] %><%= issue['para_idx'] + 1 %>段落目<% end %>
+                      </span>
+                      <div class="issue-transform">
+                        <span class="issue-original"><%= issue['original'] %></span>
+                        <% if issue['suggestion'] %>
+                          <span class="issue-arrow">→</span>
+                          <span class="issue-suggestion"><%= issue['suggestion'] %></span>
+                        <% end %>
+                      </div>
+                    </div>
+                    <div class="issue-message"><%= issue['message'] %></div>
+                    <% if issue['context'] %>
+                      <div class="issue-context"><%= issue['context'] %></div>
+                    <% end %>
+                  </div>
+                <% end %>
+                <% if infos.size > 20 %>
+                  <p class="issues-more">他 <%= infos.size - 20 %>件</p>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="empty-state success">
+            <p>✓ 問題は見つかりませんでした</p>
+          </div>
+        <% end %>
+        
+        <div class="actions">
+          <a href="<%= unit_tool_reset_path %>" class="btn" data-turbo="false">最初からやり直す</a>
+          <% if @results['issues'].any? %>
+            <a href="<%= unit_tool_export_path %>" class="btn primary" data-turbo="false">CSVエクスポート</a>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="empty-state">
+          <p>結果がありません。</p>
+        </div>
+        <div class="actions">
+          <a href="<%= unit_tool_reset_path %>" class="btn" data-turbo="false">最初からやり直す</a>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+
+  <!-- 使い方 -->
+  <details class="help-details">
+    <summary>使い方のヒント</summary>
+    <ul>
+      <li><strong>Step 1:</strong> 準拠するスタイル（JIS/Nature/ACS）を選択</li>
+      <li><strong>Step 2:</strong> スペース不要な単位（%など）を確認・編集</li>
+      <li><strong>Step 3:</strong> 追加のチェック項目を選択</li>
+      <li><strong>Step 4:</strong> Word文書（.docx）をアップロード</li>
+      <li><strong>Step 5:</strong> 結果を確認し、必要に応じてCSVエクスポート</li>
+    </ul>
+  </details>
+</main>

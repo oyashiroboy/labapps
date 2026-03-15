@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <title><%= content_for(:title) || "おやしろ Apps — 研究者のためのユーティリティ" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="研究者・教育者向けのツール群。スライドテンプレート生成、VBA変換など。">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="おやしろ Apps">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=BIZ+UDGothic:wght@400;700&display=swap" rel="stylesheet">
+
+    <%= stylesheet_link_tag "app", "data-turbo-track": "reload" %>
+
+    <% if Rails.env.development? %>
+    <style>
+      .dev-banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(90deg, #ff6b6b, #ffa500);
+        color: white;
+        text-align: center;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 99999;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      body { padding-top: 28px !important; }
+    </style>
+    <% end %>
+  </head>
+
+  <body>
+    <% if Rails.env.development? %>
+    <div class="dev-banner">
+      🚧 DEVELOPMENT環境 — localhost:3001 | Rails <%= Rails.version %> | Ruby <%= RUBY_VERSION %>
+    </div>
+    <% end %>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="/" class="site-logo">
+          <span class="logo-text">おやしろ<span class="logo-accent">Lab</span></span>
+        </a>
+        <nav class="site-nav">
+          <a href="/ppt_tool" class="nav-item">Slide Themer</a>
+          <a href="/vba_tool" class="nav-item">VBA Converter</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-main">
+      <%= yield %>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h4>利用について</h4>
+            <p>本サイトのツールは<strong>研究・教育目的</strong>での利用を想定しています。サーバー維持費は開発者の好意により拠出しております。商用利用や大規模なバッチ処理はご遠慮ください。私的利用も大規模でない場合は利用いただいて構いません。</p>
+            <p>商用での利用をご希望の方は、お気軽にご連絡ください。別途対応いたします。</p>
+            <p class="footer-note">※ 一部のツールは個別ページにて「どなたでも利用可」と明記している場合があります。</p>
+          </div>
+          <div class="footer-section">
+            <h4>免責事項</h4>
+            <p>本サービスは予告なく変更・終了する場合があります。ご利用はすべて自己責任でお願いいたします。</p>
+            <p>開発者（原）が許諾した方、または直接の知人の方は、用途を問わずご自由にお使いください。</p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p class="copyright">© 2025 oyashiroboy — <a href="https://おやしろ.jp" target="_blank" rel="noopener">おやしろ.jp</a></p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

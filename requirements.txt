@@ -1,0 +1,9 @@
+flask
+pandas
+openpyxl
+xlsxwriter
+python-pptx
+python-docx
+pillow
+scikit-learn
+numpy

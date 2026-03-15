@@ -1,0 +1,150 @@
+/* PPT Tool - Windows 95 業務ソフト風デザイン */
+.ppt-tool {
+  padding: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  font-family: 'MS UI Gothic', 'Noto Sans JP', system-ui, sans-serif;
+  color: #000000;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+}
+
+.ppt-tool h1 {
+  font-size: 1.2rem;
+  margin: 0 0 8px;
+  font-weight: bold;
+}
+
+.ppt-tool p {
+  margin: 0 0 8px;
+  color: #000000;
+  font-size: 0.9rem;
+}
+
+.ppt-tool .panel {
+  border: 2px groove #c0c0c0;
+  padding: 12px;
+  background: #c0c0c0;
+}
+
+.ppt-tool .panel + .panel {
+  margin-top: 12px;
+}
+
+.ppt-tool .row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ppt-tool .field {
+  margin: 8px 0;
+}
+
+.ppt-tool label {
+  display: block;
+  font-weight: normal;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.ppt-tool input[type="text"],
+.ppt-tool input[type="file"],
+.ppt-tool select {
+  width: min(100%, 400px);
+  padding: 3px 4px;
+  border: 2px solid;
+  border-color: #404040 #ffffff #ffffff #404040;
+  background: #ffffff;
+  color: #000000;
+  font-size: 0.9rem;
+}
+
+.ppt-tool input[type="color"] {
+  width: 40px;
+  height: 32px;
+  padding: 2px;
+  border: 2px solid;
+  border-color: #404040 #ffffff #ffffff #404040;
+  background: #ffffff;
+}
+
+.ppt-tool .help {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #404040;
+}
+
+.ppt-tool .actions {
+  margin-top: 12px;
+}
+
+.ppt-tool .btn {
+  display: inline-block;
+  padding: 4px 16px;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  background: #c0c0c0;
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 23px;
+  font-size: 0.9rem;
+}
+
+.ppt-tool .btn:active {
+  border-color: #404040 #ffffff #ffffff #404040;
+}
+
+.ppt-tool .btn.primary {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  font-weight: bold;
+}
+
+.ppt-tool .btn.primary:active {
+  border-color: #404040 #ffffff #ffffff #404040;
+}
+
+.ppt-tool .alert {
+  border: 2px solid;
+  border-color: #404040 #ffffff #ffffff #404040;
+  padding: 8px 12px;
+  margin: 0 0 12px;
+  background: #ffffff;
+  font-size: 0.9rem;
+}
+
+.ppt-tool .alert.success {
+  color: #006600;
+}
+
+.ppt-tool .palette-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .ppt-tool .palette-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ppt-tool .palette-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  border: 2px groove #c0c0c0;
+  padding: 8px;
+  background: #c0c0c0;
+}
+
+.ppt-tool .mono {
+  font-family: 'MS Gothic', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+}

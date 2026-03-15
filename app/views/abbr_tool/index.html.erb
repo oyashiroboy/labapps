@@ -1,0 +1,189 @@
+<main class="abbr-tool">
+  <header class="page-header">
+    <h1>Abbreviation Checker</h1>
+    <p class="page-desc">Word文書内の略語使用をチェックします。<br>定義位置・使用箇所を一覧表示し、Abstract/本文の整合性を確認できます。</p>
+  </header>
+
+  <% if flash[:notice].present? %>
+    <div class="alert success"><%= flash[:notice] %></div>
+  <% end %>
+
+  <% if flash[:alert].present? %>
+    <div class="alert"><%= flash[:alert] %></div>
+  <% end %>
+
+  <!-- ステップインジケーター -->
+  <div class="step-indicator">
+    <div class="step <%= @step >= 1 ? 'active' : '' %> <%= @step > 1 ? 'completed' : '' %>">
+      <span class="step-num">1</span>
+      <span class="step-label">ファイル選択</span>
+    </div>
+    <div class="step-line <%= @step > 1 ? 'active' : '' %>"></div>
+    <div class="step <%= @step >= 2 ? 'active' : '' %> <%= @step > 2 ? 'completed' : '' %>">
+      <span class="step-num">2</span>
+      <span class="step-label">略語選択</span>
+    </div>
+    <div class="step-line <%= @step > 2 ? 'active' : '' %>"></div>
+    <div class="step <%= @step >= 3 ? 'active' : '' %>">
+      <span class="step-num">3</span>
+      <span class="step-label">結果確認</span>
+    </div>
+  </div>
+
+  <% if @step == 1 %>
+    <!-- ========== Step 1: ファイルアップロード ========== -->
+    <section class="form-section">
+      <h2 class="section-label">Word文書をアップロード</h2>
+      
+      <%= form_with url: abbr_tool_extract_path, method: :post, multipart: true, local: true, data: { turbo: false }, class: "main-form" do |f| %>
+        <div class="field">
+          <label>Wordファイル（.docx）</label>
+          <%= f.file_field :docx_file, accept: ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" %>
+          <div class="help">最大20MBまで</div>
+        </div>
+        
+        <div class="field">
+          <label>カッコ内テキストの最大文字数</label>
+          <%= f.number_field :max_len, value: 20, min: 5, max: 50, class: "input-small" %>
+          <div class="help">長い化合物名を拾いたい場合は増やしてください</div>
+        </div>
+        
+        <div class="actions">
+          <%= f.submit "抽出開始", class: "btn primary large" %>
+        </div>
+      <% end %>
+    </section>
+
+  <% elsif @step == 2 %>
+    <!-- ========== Step 2: 略語選択 & 正式名称入力 ========== -->
+    <section class="form-section">
+      <h2 class="section-label">略語を選択してください</h2>
+      <p class="section-desc">
+        チェックしたい略語を選択し、正式名称を入力してください。<br>
+        <% if @intro_para_idx %>
+          <span class="info-badge">Introduction: <%= @intro_para_idx + 1 %>段落目</span>
+        <% else %>
+          <span class="warning-badge">⚠️ Introductionが検出されませんでした</span>
+        <% end %>
+      </p>
+
+      <%= form_with url: abbr_tool_search_path, method: :post, local: true, data: { turbo: false }, class: "main-form" do |f| %>
+        
+        <div class="abbr-candidates">
+          <% @candidates.each_with_index do |cand, idx| %>
+            <div class="abbr-candidate <%= cand['is_likely_abbr'] ? 'likely' : 'unlikely' %>">
+              <div class="abbr-check">
+                <input type="checkbox" 
+                       name="abbreviations[<%= idx %>][selected]" 
+                       value="1" 
+                       id="abbr_<%= idx %>"
+                       <%= cand['is_likely_abbr'] ? 'checked' : '' %>>
+                <input type="hidden" name="abbreviations[<%= idx %>][abbr]" value="<%= cand['content'] %>">
+              </div>
+              
+              <div class="abbr-content">
+                <label for="abbr_<%= idx %>" class="abbr-name"><%= cand['content'] %></label>
+                <span class="abbr-meta">
+                  <%= cand['first_section'] == 'abstract' ? '📄 Abstract' : '📝 本文' %>
+                  (<%= cand['first_para_idx'] + 1 %>段落目)
+                </span>
+              </div>
+              
+              <div class="abbr-inputs">
+                <input type="text" 
+                       name="abbreviations[<%= idx %>][full_name]" 
+                       placeholder="正式名称" 
+                       class="input-fullname">
+                <input type="text" 
+                       name="abbreviations[<%= idx %>][synonyms]" 
+                       placeholder="シノニム（カンマ区切り）" 
+                       class="input-synonyms">
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <% if @candidates.empty? %>
+          <div class="empty-state">
+            <p>カッコ内テキストが見つかりませんでした。</p>
+          </div>
+        <% end %>
+
+        <div class="actions">
+          <a href="<%= abbr_tool_reset_path %>" class="btn" data-turbo="false">リセット</a>
+          <%= f.submit "検索実行", class: "btn primary large" %>
+        </div>
+      <% end %>
+    </section>
+
+  <% elsif @step == 3 %>
+    <!-- ========== Step 3: 検索結果 ========== -->
+    <section class="form-section">
+      <h2 class="section-label">検索結果</h2>
+      
+      <% @search_results.each do |result| %>
+        <div class="result-card <%= result['warnings'].any? ? 'has-warning' : '' %>">
+          <div class="result-header">
+            <h3 class="result-abbr"><%= result['abbr'] %></h3>
+            <span class="result-count"><%= result['total_count'] %>箇所</span>
+            <% if result['definition_found'] %>
+              <span class="badge success">定義あり</span>
+            <% else %>
+              <span class="badge warning">定義なし</span>
+            <% end %>
+          </div>
+          
+          <% if result['full_name'].present? %>
+            <div class="result-fullname"><%= result['full_name'] %></div>
+          <% end %>
+          
+          <% if result['warnings'].any? %>
+            <div class="result-warnings">
+              <% result['warnings'].each do |warning| %>
+                <div class="warning-item">⚠️ <%= warning['message'] %></div>
+              <% end %>
+            </div>
+          <% end %>
+          
+          <div class="result-occurrences">
+            <% result['occurrences'].each do |occ| %>
+              <div class="occurrence <%= occ['is_definition'] ? 'is-definition' : '' %>">
+                <span class="occ-location">
+                  <%= occ['section'] == 'abstract' ? '📄' : '📝' %>
+                  <%= occ['para_idx'] + 1 %>段落目
+                  <% if occ['is_definition'] %><span class="def-badge">定義</span><% end %>
+                </span>
+                <span class="occ-context">"<%= occ['context'] %>"</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @search_results.empty? %>
+        <div class="empty-state">
+          <p>検索結果がありません。</p>
+        </div>
+      <% end %>
+
+      <div class="actions">
+        <a href="<%= abbr_tool_reset_path %>" class="btn" data-turbo="false">最初からやり直す</a>
+        <% if @search_results.any? %>
+          <a href="<%= abbr_tool_export_path %>" class="btn primary" data-turbo="false">略語リストをエクスポート</a>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <!-- 使い方 -->
+  <details class="help-details">
+    <summary>使い方のヒント</summary>
+    <ul>
+      <li><strong>Step 1:</strong> Word文書（.docx）をアップロードします</li>
+      <li><strong>Step 2:</strong> 抽出されたカッコ内テキストから略語を選択し、正式名称を入力します</li>
+      <li><strong>Step 3:</strong> 各略語の使用箇所と警告（定義前使用など）を確認できます</li>
+      <li>「Introduction」という見出しを境界として、Abstract/本文を区別します</li>
+      <li>シノニムを入力すると、別表記（DPPH・など）も検索対象になります</li>
+    </ul>
+  </details>
+</main>

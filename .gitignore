@@ -1,0 +1,31 @@
+# Bundler
+/.bundle
+/vendor/bundle
+
+# Rails runtime files
+/log/*
+/tmp/*
+!/log/.keep
+
+# Storage and uploads
+/storage/*
+!/storage/.keep
+
+# Database
+/db/*.sqlite3
+/db/*.sqlite3-*
+
+# Environment and secrets
+/.env
+/.env.*
+/config/master.key
+/config/credentials/*.key
+
+# Build artifacts
+/public/assets
+/node_modules
+
+# Misc
+*.swp
+*.swo
+.DS_Store

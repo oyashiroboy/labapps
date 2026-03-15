@@ -1,0 +1,59 @@
+<main class="vba-tool">
+  <header class="page-header">
+    <h1>Excel Add-in for Food Science</h1>
+    <p class="page-desc">食品学研究者向けのExcelアドインを作成しております。<br>論文執筆・統計解析の効率化を目指した機能群を実装済みです。</p>
+  </header>
+
+  <% if @error_message %>
+    <div class="error"><%= @error_message %></div>
+  <% end %>
+
+  <section class="features-section">
+    <h2 class="section-title">Features</h2>
+    
+    <ul class="feature-list">
+      <li class="feature-item">
+        <div class="feature-content">
+          <h3>論文用棒グラフの一括整形</h3>
+          <p>タイトル非表示・線の太さ調整・等質サブグループ表示・標準誤差エラーバー付与・単位設定 等を瞬時に実行します。</p>
+        </div>
+      </li>
+      
+      <li class="feature-item">
+        <div class="feature-content">
+          <h3>SPSS Tukey検定対応</h3>
+          <p>等質サブグループの英字判定結果をワンクリックで生成・付与します。</p>
+        </div>
+      </li>
+      
+      <li class="feature-item">
+        <div class="feature-content">
+          <h3>SPSS実行用シンタックス自動生成</h3>
+          <p>選択したExcel表をSPSS用に整形し、そのまま使えるコードを出力します。</p>
+        </div>
+      </li>
+      
+      <li class="feature-item">
+        <div class="feature-content">
+          <h3>標準誤差のワンクリック計算</h3>
+          <p>面倒な関数入力なしで標準誤差を算出します。</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="distribution-section">
+    <h2 class="section-title">Distribution</h2>
+    
+    <div class="notice-box warning">
+      <div class="notice-icon">⚠️</div>
+      <div class="notice-content">
+        <h3>配布と入手方法について</h3>
+        <p>現在準備中です！！マニュアルが無い点、SPSSバージョン26以上がある前提で作成されている点を修正中です</p>
+        <p><strong>ご希望の方には個別に配布いたします。</strong> 興味のある方は、開発者の原まで直接ご一報いただければ対応します。</p>
+      </div>
+    </div>
+  </section>
+
+
+</main>
